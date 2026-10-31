@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helpdesk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F4F5FB; --panel: #FFFFFF; --ink: #1F2340; --muted: #5F6688; --line: #E2E5F0; --soft: #EEF0F8;
+    --role: #6C4CF1; --role-soft: #EFEBFF;
+    --amber: #F59F00;  --amber-t: #8F5800;
+    --blue: #3B82F6;   --blue-t: #1C56B8;
+    --violet: #8B5CF6; --violet-t: #5B2BD0;
+    --green: #12B886;  --green-t: #07714F;
+    --slate: #748098;  --slate-t: #465066;
+    --pink: #E64980;   --pink-t: #A61E59;
+    --teal: #15AABF;   --teal-t: #0A6878;
+    --orange: #F76707; --orange-t: #A84300;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  }
+  body[data-role="AGENT"] { --role: #0C8599; --role-soft: #E2F6F8; }
+  body[data-role="ADMIN"] { --role: #D9480F; --role-soft: #FFEFE5; }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --paper: #13152A; --panel: #1C1F38; --ink: #ECEEFA; --muted: #A3A9C9; --line: #2E3254; --soft: #252948;
+      --role-soft: #2A2556;
+      --amber-t: #FFC94D; --blue-t: #8DB8FF; --violet-t: #C4ABFF; --green-t: #63E6BE;
+      --slate-t: #BAC3D8; --pink-t: #FF92BC; --teal-t: #6ADCEB; --orange-t: #FFAD5C;
+    }
+    body[data-role="AGENT"] { --role-soft: #15384A; }
+    body[data-role="ADMIN"] { --role-soft: #42261C; }
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--body); font-size: 15px; line-height: 1.5; background: var(--paper); color: var(--ink); }
+  button, input, select, textarea { font: inherit; }
+  :focus-visible { outline: 3px solid var(--role); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+
+  /* Hue helpers: one class sets the color family for tags, stubs and dots */
+  .h-amber  { --h: var(--amber);  --ht: var(--amber-t); }
+  .h-blue   { --h: var(--blue);   --ht: var(--blue-t); }
+  .h-violet { --h: var(--violet); --ht: var(--violet-t); }
+  .h-green  { --h: var(--green);  --ht: var(--green-t); }
+  .h-slate  { --h: var(--slate);  --ht: var(--slate-t); }
+  .h-pink   { --h: var(--pink);   --ht: var(--pink-t); }
+  .h-teal   { --h: var(--teal);   --ht: var(--teal-t); }
+  .h-orange { --h: var(--orange); --ht: var(--orange-t); }
+  .tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600;
+         background: color-mix(in srgb, var(--h) 16%, transparent); color: var(--ht); white-space: nowrap; }
+  .tag::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--h); }
+
+  .avatar { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%;
+            background: var(--h); color: #fff; font-weight: 700; font-size: 13px; }
+  .avatar.lg { width: 56px; height: 56px; font-size: 22px; font-family: var(--display); border: 3px solid rgba(255,255,255,.55); }
+
+  /* ---------- Hero: the header is a ticket stub with a perforated bottom edge ---------- */
+  .hero { position: relative; background: var(--role); color: #fff; padding: 22px clamp(16px, 4vw, 40px) 34px; }
+  .hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: -9px; height: 18px;
+                 background: radial-gradient(circle at 11px 9px, var(--paper) 7px, transparent 7.5px) repeat-x;
+                 background-size: 22px 18px; }
+  .hero-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+  .brand { font-family: var(--display); font-weight: 800; font-size: 18px; letter-spacing: -.01em; opacity: .95; }
+  .hero-links { display: flex; gap: 10px; align-items: center; }
+  .hero-links a, .hero-links button { color: #fff; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.35);
+            padding: 7px 14px; border-radius: 999px; text-decoration: none; cursor: pointer; font-weight: 600; font-size: 14px; }
+  .hero-links a:hover, .hero-links button:hover { background: rgba(255,255,255,.24); }
+  .hero-main { display: flex; gap: 18px; align-items: center; margin-top: 22px; flex-wrap: wrap; }
+  .hero h1 { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 4.2vw, 44px); line-height: 1.05; letter-spacing: -.02em; margin: 0; }
+  .hero p { margin: 6px 0 0; font-size: 17px; max-width: 62ch; opacity: .93; }
+  .role-badge { display: inline-block; margin-left: 6px; padding: 2px 10px; border-radius: 999px; background: rgba(255,255,255,.2);
+                font-family: var(--body); font-size: 13px; font-weight: 700; vertical-align: middle; letter-spacing: 0; }
+  .new-btn { margin-left: auto; background: #fff; color: var(--role); border: none; padding: 12px 20px; border-radius: 12px;
+             font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+
+  /* ---------- Layout ---------- */
+  main { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px;
+         padding: 28px clamp(16px, 4vw, 40px) 40px; align-items: start; }
+  @media (max-width: 940px) { main { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
+  h2 { font-family: var(--display); font-size: 20px; font-weight: 700; margin: 0 0 14px; letter-spacing: -.01em; }
+  h3 { font-family: var(--display); font-size: 16px; font-weight: 700; margin: 22px 0 10px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 12px 0 5px; }
+  input, select, textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); }
+  input:focus, select:focus, textarea:focus { border-color: var(--role); outline: none; }
+  textarea { min-height: 84px; resize: vertical; }
+  .btn { padding: 10px 18px; border-radius: 10px; border: none; background: var(--role); color: #fff; font-weight: 700; cursor: pointer; }
+  .btn.soft { background: var(--role-soft); color: var(--role); }
+  body[data-role] .btn.soft { color: var(--ink); }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* Category picker: colored choice chips instead of a dropdown */
+  .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+  .choice { border: 1.5px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 7px 14px; cursor: pointer; font-weight: 600; font-size: 14px; }
+  .choice[aria-pressed="true"] { border-color: var(--h); background: color-mix(in srgb, var(--h) 16%, transparent); color: var(--ht); }
+
+  /* ---------- Filters ---------- */
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .filter { border: 1.5px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 6px 13px; cursor: pointer; font-weight: 600; font-size: 14px; }
+  .filter .n { display: inline-block; min-width: 20px; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--soft); font-size: 12px; text-align: center; }
+  .filter[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+  .filter[aria-pressed="true"] .n { background: rgba(127,127,127,.35); }
+  .filter.alert .n { background: var(--pink); color: #fff; }
+
+  /* ---------- Ticket stubs ---------- */
+  .stubs { display: grid; gap: 12px; }
+  .stub { display: grid; grid-template-columns: 84px 1fr; text-align: left; width: 100%; padding: 0; cursor: pointer;
+          background: var(--panel); color: var(--ink); border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .stub:hover { border-color: color-mix(in srgb, var(--h) 60%, var(--line)); }
+  .stub.selected { border-color: var(--h); box-shadow: 0 0 0 3px color-mix(in srgb, var(--h) 22%, transparent); }
+  .stub-num { position: relative; display: grid; place-content: center; text-align: center; background: var(--h); color: #fff;
+              border-right: 2px dashed rgba(255,255,255,.7); }
+  .stub-num b { font-family: var(--display); font-size: 26px; font-weight: 800; line-height: 1; }
+  .stub-num small { font-size: 11px; font-weight: 600; opacity: .9; margin-top: 4px; }
+  .stub-num::before, .stub-num::after { content: ""; position: absolute; right: -9px; width: 16px; height: 16px; border-radius: 50%; background: var(--paper); }
+  .stub-num::before { top: -8px; } .stub-num::after { bottom: -8px; }
+  .stub-body { padding: 12px 16px; min-width: 0; }
+  .stub-title { font-weight: 700; font-size: 16px; margin: 0 0 8px; overflow-wrap: anywhere; }
+  .stub-meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+  .stub-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; margin-top: 10px; font-size: 13px; color: var(--muted); }
+  .who-line { display: inline-flex; align-items: center; gap: 7px; }
+  .who-line .avatar { width: 22px; height: 22px; font-size: 10px; }
+  .due.soon { color: var(--orange-t); font-weight: 700; }
+  .due.late { color: var(--pink-t); font-weight: 700; }
+  .due.ok { color: var(--green-t); font-weight: 600; }
+  .empty { text-align: center; color: var(--muted); padding: 34px 12px; }
+  .empty strong { display: block; font-family: var(--display); font-size: 18px; color: var(--ink); margin-bottom: 4px; }
+
+  /* ---------- Detail ---------- */
+  #detail { position: sticky; top: 16px; }
+  .detail-head { border-top: 8px solid var(--h); margin: -20px -20px 0; padding: 18px 20px 0; border-radius: 18px 18px 0 0; }
+  .detail-head h2 { font-size: 24px; margin-bottom: 10px; overflow-wrap: anywhere; }
+  .desc { margin: 14px 0 0; padding: 12px 14px; background: var(--soft); border-radius: 12px; }
+  .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 18px 0 6px; }
+  .step { text-align: center; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .step i { display: block; height: 6px; border-radius: 999px; background: var(--line); margin-bottom: 6px; }
+  .step.done i { background: var(--role); }
+  .step.now { color: var(--ink); }
+  .step.now i { background: var(--role); box-shadow: 0 0 0 3px color-mix(in srgb, var(--role) 25%, transparent); }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .fact { padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 12px; }
+  .fact span { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .fact div { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-weight: 600; }
+  .actions { margin-top: 16px; padding: 14px; border-radius: 14px; background: var(--role-soft); }
+  .actions .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .actions label { margin-top: 0; }
+
+  .chat { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .msg { display: flex; gap: 10px; align-items: flex-end; }
+  .msg .bubble { max-width: 78%; padding: 10px 14px; border-radius: 16px 16px 16px 4px; background: var(--soft); }
+  .msg .bubble small { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; font-weight: 600; }
+  .msg.mine { flex-direction: row-reverse; }
+  .msg.mine .bubble { background: var(--role); color: #fff; border-radius: 16px 16px 4px 16px; }
+  .msg.mine .bubble small { color: rgba(255,255,255,.8); }
+
+  .timeline { list-style: none; padding: 0; margin: 0; }
+  .timeline li { position: relative; padding: 0 0 14px 24px; }
+  .timeline li::before { content: ""; position: absolute; left: 5px; top: 18px; bottom: 0; width: 2px; background: var(--line); }
+  .timeline li:last-child::before { display: none; }
+  .timeline .dot { position: absolute; left: 0; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--h); }
+  .timeline .small { font-size: 13px; color: var(--muted); }
+
+  #toast { position: fixed; right: 20px; bottom: 20px; max-width: 440px; padding: 13px 18px; border-radius: 14px; font-weight: 600;
+           color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,.25); transform: translateY(140%); transition: transform .25s ease; z-index: 10; }
+  #toast.show { transform: none; }
+  #toast.error { background: var(--pink); }
+  #toast.success { background: var(--green); }
+  @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-top">
+    <div class="brand">🎫 Helpdesk</div>
+    <nav class="hero-links">
+      <a href="/swagger-ui.html" target="_blank" rel="noopener" id="apiLink" hidden>API docs</a>
+      <button id="logoutBtn" type="button">Log out</button>
+    </nav>
+  </div>
+  <div class="hero-main">
+    <span class="avatar lg" id="meAvatar"></span>
+    <div>
+      <h1 id="greeting">Welcome</h1>
+      <p id="summary"></p>
+    </div>
+    <button class="new-btn" id="newBtn" type="button" hidden>+ New request</button>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="panel" id="createCard" hidden style="margin-bottom:24px">
+      <h2>What do you need help with?</h2>
+      <label for="tTitle">Short title</label>
+      <input id="tTitle" maxlength="150" placeholder="Charged twice for my order">
+      <label for="tDesc">Tell us what happened</label>
+      <textarea id="tDesc" placeholder="Include order numbers, dates or error messages, so the agent can help faster."></textarea>
+      <label>Category</label>
+      <div class="choices" id="catChoices"></div>
+      <label>How urgent is it?</label>
+      <div class="choices" id="priChoices"></div>
+      <div style="display:flex; gap:10px; margin-top:18px">
+        <button class="btn" id="createBtn" type="button">Send request</button>
+        <button class="btn soft" id="cancelBtn" type="button">Cancel</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 id="listTitle">Tickets</h2>
+      <div class="filters" id="filters"></div>
+      <div class="stubs" id="stubs"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel" id="detail">
+      <div class="empty"><strong>Pick a ticket</strong>Its conversation, progress and history show up here.</div>
+    </div>
+  </section>
+</main>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  const TOKEN_KEY = 'helpdesk_token';
+  const STEPS = ['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
+  const TRANSITIONS = { OPEN: [], ASSIGNED: ['IN_PROGRESS'], IN_PROGRESS: ['RESOLVED'], RESOLVED: ['CLOSED', 'IN_PROGRESS'], CLOSED: [] };
+  const NICE = { OPEN: 'Open', ASSIGNED: 'Assigned', IN_PROGRESS: 'In progress', RESOLVED: 'Resolved', CLOSED: 'Closed',
+                 LOW: 'Low', MEDIUM: 'Medium', HIGH: 'High', CRITICAL: 'Critical' };
+  const STATUS_HUE = { OPEN: 'orange', ASSIGNED: 'teal', IN_PROGRESS: 'blue', RESOLVED: 'green', CLOSED: 'slate' };
+  const PRIORITY_HUE = { LOW: 'slate', MEDIUM: 'blue', HIGH: 'orange', CRITICAL: 'pink' };
+  const CATEGORY_HUE = { Billing: 'amber', Technical: 'blue', Account: 'violet', Delivery: 'green', General: 'slate' };
+  const AVATAR_HUES = ['violet', 'teal', 'orange', 'pink', 'blue', 'green', 'amber'];
+
+  const state = { user: null, agents: [], categories: [], tickets: [], filter: 'ALL',
+                  selectedId: null, newCat: null, newPri: 'MEDIUM' };
+  const $ = id => document.getElementById(id);
+
+  // ---------- helpers ----------
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const firstName = n => String(n || '').replace(/\s*\(.*\)\s*/, '').split(' ')[0];
+  const initials = n => String(n || '?').replace(/\(.*\)/, '').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const hash = s => [...String(s)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+  const avatarHue = name => AVATAR_HUES[hash(name) % AVATAR_HUES.length];
+  const catHue = name => CATEGORY_HUE[name] || ['teal', 'pink', 'orange'][hash(name) % 3];
+  const avatar = (name, cls = '') => `<span class="avatar h-${avatarHue(name)} ${cls}" aria-hidden="true">${esc(initials(name))}</span>`;
+  const tag = (text, hue) => `<span class="tag h-${hue}">${esc(text)}</span>`;
+  const fmt = dt => dt ? new Date(dt).toLocaleString([], { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '–';
+  const isDone = t => t.status === 'RESOLVED' || t.status === 'CLOSED';
+  const isOverdue = t => !isDone(t) && t.slaBreached;
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+  function span(mins) {
+    const m = Math.abs(mins);
+    if (m >= 1440) return Math.round(m / 1440) + ' d';
+    if (m >= 60) return Math.floor(m / 60) + ' h ' + (m % 60) + ' min';
+    return m + ' min';
+  }
+  function due(t) {
+    if (isDone(t)) return t.slaBreached ? { text: 'Resolved after the deadline', cls: 'late' } : { text: 'Resolved on time', cls: 'ok' };
+    const mins = Math.round((new Date(t.dueAt) - Date.now()) / 60000);
+    if (mins < 0) return { text: 'Overdue by ' + span(mins), cls: 'late' };
+    return { text: 'Due in ' + span(mins), cls: mins <= 120 ? 'soon' : '' };
+  }
+
+  function toast(msg, type = 'error') {
+    const el = $('toast');
+    el.textContent = msg;
+    el.className = type + ' show';
+    clearTimeout(toast.t);
+    toast.t = setTimeout(() => { el.className = type; }, 4500);
+  }
+
+  async function api(path, options = {}) {
+    const res = await fetch('/api' + path, {
+      method: options.method || 'GET',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem(TOKEN_KEY) },
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined
+    });
+    if (res.status === 401) {
+      localStorage.removeItem(TOKEN_KEY);
+      location.replace('/login.html');
+      throw new Error('Your session ended. Log in again.');
+    }
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      let msg = (data && data.message) || res.statusText;
+      if (data && data.fieldErrors) msg = Object.values(data.fieldErrors).join('. ');
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  // ---------- start ----------
+  async function init() {
+    if (!localStorage.getItem(TOKEN_KEY)) { location.replace('/login.html'); return; }
+    try {
+      [state.user, state.categories] = await Promise.all([api('/auth/me'), api('/categories')]);
+      if (state.user.role === 'ADMIN') state.agents = await api('/users?role=AGENT');
+    } catch (e) { toast('Can’t reach the server. Start the Spring Boot app and refresh. ' + e.message); return; }
+
+    const u = state.user;
+    document.body.dataset.role = u.role;
+    document.title = 'Helpdesk – ' + firstName(u.name);
+    $('meAvatar').className = 'avatar lg h-' + avatarHue(u.name);
+    $('meAvatar').textContent = initials(u.name);
+    const hour = new Date().getHours();
+    const hello = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    const badge = { CUSTOMER: 'Customer', AGENT: (u.categoryName || '') + ' agent', ADMIN: 'Admin' }[u.role];
+    $('greeting').innerHTML = `${hello}, ${esc(firstName(u.name))} <span class="role-badge">${esc(badge)}</span>`;
+    $('listTitle').textContent = { CUSTOMER: 'Your requests', AGENT: 'Your queue', ADMIN: 'All tickets' }[u.role];
+    $('newBtn').hidden = u.role !== 'CUSTOMER';
+
+    state.newCat = state.categories[0] && state.categories[0].id;
+    renderChoices();
+    fetch('/v3/api-docs', { method: 'HEAD' }).then(r => { $('apiLink').hidden = !r.ok; }).catch(() => {});
+    await loadTickets();
+  }
+
+  async function loadTickets() {
+    try { state.tickets = await api('/tickets'); }
+    catch (e) { toast(e.message); return; }
+    renderSummary();
+    renderFilters();
+    renderList();
+  }
+
+  // ---------- personal summary in the header ----------
+  function renderSummary() {
+    const t = state.tickets, u = state.user;
+    const count = s => t.filter(x => x.status === s).length;
+    const overdue = t.filter(isOverdue).length;
+    let text;
+    if (u.role === 'CUSTOMER') {
+      const active = count('OPEN') + count('ASSIGNED') + count('IN_PROGRESS');
+      const waiting = count('RESOLVED');
+      if (!t.length) text = 'Need help with something? Send your first request and we’ll route it to the right person.';
+      else {
+        text = active ? `You have ${plural(active, 'open request')}.` : 'All your requests are wrapped up.';
+        const working = t.find(x => x.status === 'IN_PROGRESS' && x.agent);
+        if (working) text += ` ${firstName(working.agent.name)} is working on “${working.title}”.`;
+        if (waiting) text += ` ${plural(waiting, 'request')} resolved and waiting for you to close.`;
+      }
+    } else if (u.role === 'AGENT') {
+      const active = count('ASSIGNED') + count('IN_PROGRESS');
+      const soon = t.filter(x => !isDone(x) && !x.slaBreached && (new Date(x.dueAt) - Date.now()) <= 7200000).length;
+      text = active ? `${plural(active, 'ticket')} in your queue` : 'Your queue is clear';
+      if (overdue) text += `, and ${overdue} ${overdue === 1 ? 'is' : 'are'} past the deadline. Start with those.`;
+      else if (soon) text += `, ${soon} due within 2 hours.`;
+      else text += active ? ', all on track.' : '. Nice work.';
+    } else {
+      const unassigned = count('OPEN');
+      text = `${plural(t.length, 'ticket')} across the team, ${unassigned} unassigned and ${overdue} past their deadline.`;
+    }
+    $('summary').textContent = text;
+  }
+
+  // ---------- filters ----------
+  function renderFilters() {
+    const t = state.tickets;
+    const items = [['ALL', 'All', t.length], ...STEPS.map(s => [s, NICE[s], t.filter(x => x.status === s).length]),
+                   ['OVERDUE', 'Overdue', t.filter(isOverdue).length]];
+    $('filters').innerHTML = items
+      .filter(([key, , n]) => key === 'ALL' || n > 0 || key === state.filter)
+      .map(([key, label, n]) => `<button type="button" class="filter ${key === 'OVERDUE' && n ? 'alert' : ''}"
+          data-filter="${key}" aria-pressed="${state.filter === key}">${label}<span class="n">${n}</span></button>`).join('');
+  }
+
+  // ---------- ticket stubs ----------
+  function renderList() {
+    const f = state.filter;
+    const list = state.tickets.filter(t => f === 'ALL' || (f === 'OVERDUE' ? isOverdue(t) : t.status === f));
+    if (!list.length) {
+      const msg = !state.tickets.length
+        ? { CUSTOMER: ['No requests yet', 'Use New request at the top to ask for help.'],
+            AGENT: ['Your queue is empty', 'New tickets in your category are assigned to you automatically.'],
+            ADMIN: ['No tickets yet', 'Tickets appear here as soon as customers raise them.'] }[state.user.role]
+        : ['Nothing here', 'No tickets match this filter.'];
+      $('stubs').innerHTML = `<div class="empty"><strong>${msg[0]}</strong>${msg[1]}</div>`;
+      return;
+    }
+    $('stubs').innerHTML = list.map(t => {
+      const d = due(t);
+      const person = state.user.role === 'CUSTOMER'
+        ? (t.agent ? `<span class="who-line">${avatar(t.agent.name)}${esc(firstName(t.agent.name))} is on it</span>` : '<span>Waiting for an agent</span>')
+        : `<span class="who-line">${avatar(t.customer.name)}${esc(t.customer.name)}</span>`;
+      return `<button type="button" class="stub h-${catHue(t.categoryName)} ${t.id === state.selectedId ? 'selected' : ''}" data-id="${t.id}">
+          <span class="stub-num"><b>#${t.id}</b><small>${esc(t.categoryName)}</small></span>
+          <span class="stub-body">
+            <span class="stub-title" style="display:block">${esc(t.title)}</span>
+            <span class="stub-meta">${tag(NICE[t.status], STATUS_HUE[t.status])}${tag(NICE[t.priority] + ' priority', PRIORITY_HUE[t.priority])}</span>
+            <span class="stub-foot">${person}<span class="due ${d.cls}">${d.text}</span></span>
+          </span>
+        </button>`;
+    }).join('');
+  }
+
+  // ---------- detail ----------
+  async function openTicket(id) {
+    state.selectedId = id;
+    renderList();
+    try { renderDetail(await api('/tickets/' + id)); }
+    catch (e) { toast(e.message); }
+  }
+
+  function actionLabel(from, to) {
+    const role = state.user.role;
+    if (from === 'RESOLVED' && to === 'IN_PROGRESS') return 'Reopen';
+    if (to === 'IN_PROGRESS') return 'Start working on it';
+    if (to === 'RESOLVED') return 'Mark as resolved';
+    if (to === 'CLOSED') return role === 'CUSTOMER' ? 'Yes, close my request' : 'Close ticket';
+    return NICE[to];
+  }
+
+  function renderDetail(t) {
+    const me = state.user;
+    const hue = catHue(t.categoryName);
+    const stepIndex = STEPS.indexOf(t.status);
+    const d = due(t);
+
+    // Show only the moves this role is allowed to make (the server checks again)
+    let moves = TRANSITIONS[t.status] || [];
+    if (me.role === 'AGENT') moves = moves.filter(s => s !== 'CLOSED');
+    if (me.role === 'CUSTOMER') moves = t.status === 'RESOLVED' ? moves : [];
+    const prompt = me.role === 'CUSTOMER' && t.status === 'RESOLVED'
+      ? 'Did this fix your problem?' : 'Update this ticket';
+
+    let assign = '';
+    if (me.role === 'ADMIN' && !isDone(t)) {
+      const agents = state.agents.filter(a => a.categoryId === t.categoryId);
+      assign = `<label for="assignSelect" style="margin-top:12px">Hand it to someone else</label>
+        <div class="row" style="margin-top:0">
+          <select id="assignSelect" style="flex:1; min-width:160px">
+            <option value="">Least busy ${esc(t.categoryName)} agent</option>
+            ${agents.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('')}
+          </select>
+          <button class="btn" type="button" id="assignBtn">Reassign</button>
+        </div>`;
+    }
+
+    const actionsBox = (moves.length || assign) ? `
+      <div class="actions">
+        ${moves.length ? `<label for="noteInput">${prompt}</label>
+          <input id="noteInput" placeholder="Add a note for the history (optional)">
+          <div class="row">${moves.map((s, i) => `<button type="button" class="btn ${i ? 'soft' : ''}" data-move="${s}">${actionLabel(t.status, s)}</button>`).join('')}</div>` : ''}
+        ${assign}
+      </div>` : '';
+
+    $('detail').innerHTML = `
+      <div class="detail-head h-${hue}">
+        <h2>${esc(t.title)}</h2>
+        <div class="stub-meta">${tag(t.categoryName, hue)}${tag(NICE[t.status], STATUS_HUE[t.status])}${tag(NICE[t.priority] + ' priority', PRIORITY_HUE[t.priority])}</div>
+      </div>
+      <p class="desc">${esc(t.description)}</p>
+
+      <div class="steps" aria-label="Progress">
+        ${STEPS.map((s, i) => `<div class="step ${i < stepIndex ? 'done' : ''} ${i === stepIndex ? 'now' : ''}"><i></i>${NICE[s]}</div>`).join('')}
+      </div>
+
+      <div class="facts">
+        <div class="fact"><span>Raised by</span><div>${avatar(t.customer.name)}${esc(t.customer.name)}</div></div>
+        <div class="fact"><span>Handled by</span><div>${t.agent ? avatar(t.agent.name) + esc(t.agent.name) : 'Not assigned yet'}</div></div>
+        <div class="fact"><span>Raised</span><div>${fmt(t.createdAt)}</div></div>
+        <div class="fact"><span>Deadline ${fmt(t.dueAt)}</span><div class="due ${d.cls}">${d.text}</div></div>
+      </div>
+
+      ${actionsBox}
+
+      <h3>Conversation</h3>
+      <ul class="chat">
+        ${t.comments.length ? t.comments.map(c => {
+          const mine = c.author.id === me.id;
+          return `<li class="msg ${mine ? 'mine' : ''}">${avatar(c.author.name)}
+            <div class="bubble"><small>${mine ? 'You' : esc(c.author.name)}, ${fmt(c.createdAt)}</small>${esc(c.message)}</div></li>`;
+        }).join('') : '<li class="empty" style="padding:12px">No messages yet. Start the conversation below.</li>'}
+      </ul>
+      ${t.status !== 'CLOSED' ? `
+        <label for="commentInput">Your message</label>
+        <textarea id="commentInput" placeholder="Write a reply"></textarea>
+        <div style="margin-top:10px"><button class="btn" type="button" id="commentBtn">Send message</button></div>` : ''}
+
+      <h3>History</h3>
+      <ul class="timeline">
+        ${t.statusHistory.map(h => `<li class="h-${STATUS_HUE[h.toStatus]}"><span class="dot"></span>
+          <div><strong>${h.fromStatus && h.fromStatus !== h.toStatus ? NICE[h.fromStatus] + ' to ' : ''}${NICE[h.toStatus]}</strong></div>
+          <div class="small">${esc(h.changedBy)}, ${fmt(h.changedAt)}${h.note ? '. ' + esc(h.note) : ''}</div></li>`).join('')}
+      </ul>`;
+
+    document.querySelectorAll('[data-move]').forEach(b => b.addEventListener('click', () => changeStatus(t.id, b.dataset.move)));
+    if ($('assignBtn')) $('assignBtn').addEventListener('click', () => assign(t.id));
+    if ($('commentBtn')) $('commentBtn').addEventListener('click', () => comment(t.id));
+  }
+
+  async function act(fn, okMsg) {
+    try {
+      const updated = await fn();
+      toast(okMsg, 'success');
+      renderDetail(updated);
+      await loadTickets();
+    } catch (e) { toast(e.message); }
+  }
+  function changeStatus(id, status) {
+    const note = $('noteInput') ? $('noteInput').value.trim() : '';
+    act(() => api(`/tickets/${id}/status`, { method: 'PATCH', body: { status, note: note || null } }), 'Moved to ' + NICE[status].toLowerCase());
+  }
+  function assign(id) {
+    const v = $('assignSelect').value;
+    act(() => api(`/tickets/${id}/assign`, { method: 'PUT', body: { agentId: v ? Number(v) : null } }), 'Ticket reassigned');
+  }
+  function comment(id) {
+    act(() => api(`/tickets/${id}/comments`, { method: 'POST', body: { message: $('commentInput').value } }), 'Message sent');
+  }
+
+  // ---------- new request (customers) ----------
+  function renderChoices() {
+    $('catChoices').innerHTML = state.categories.map(c =>
+      `<button type="button" class="choice h-${catHue(c.name)}" data-cat="${c.id}" aria-pressed="${c.id === state.newCat}">${esc(c.name)}</button>`).join('');
+    $('priChoices').innerHTML = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map(p =>
+      `<button type="button" class="choice h-${PRIORITY_HUE[p]}" data-pri="${p}" aria-pressed="${p === state.newPri}">${NICE[p]}</button>`).join('');
+  }
+
+  async function createTicket() {
+    const btn = $('createBtn');
+    btn.disabled = true;
+    try {
+      const t = await api('/tickets', { method: 'POST', body: {
+        title: $('tTitle').value, description: $('tDesc').value, categoryId: state.newCat, priority: state.newPri } });
+      toast(t.agent ? `Request #${t.id} sent. ${firstName(t.agent.name)} will help you.` : `Request #${t.id} sent.`, 'success');
+      $('tTitle').value = ''; $('tDesc').value = '';
+      $('createCard').hidden = true;
+      state.filter = 'ALL';
+      state.selectedId = t.id;
+      await loadTickets();
+      renderDetail(t);
+    } catch (e) { toast(e.message); }
+    btn.disabled = false;
+  }
+
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + localStorage.getItem(TOKEN_KEY) } }).catch(() => null);
+    localStorage.removeItem(TOKEN_KEY);
+    location.replace('/login.html');
+  }
+
+  // ---------- events ----------
+  $('logoutBtn').addEventListener('click', logout);
+  $('newBtn').addEventListener('click', () => { $('createCard').hidden = false; $('tTitle').focus(); });
+  $('cancelBtn').addEventListener('click', () => { $('createCard').hidden = true; });
+  $('createBtn').addEventListener('click', createTicket);
+  $('filters').addEventListener('click', e => {
+    const b = e.target.closest('[data-filter]');
+    if (!b) return;
+    state.filter = b.dataset.filter;
+    renderFilters();
+    renderList();
+  });
+  $('stubs').addEventListener('click', e => {
+    const b = e.target.closest('[data-id]');
+    if (b) openTicket(Number(b.dataset.id));
+  });
+  $('catChoices').addEventListener('click', e => {
+    const b = e.target.closest('[data-cat]');
+    if (b) { state.newCat = Number(b.dataset.cat); renderChoices(); }
+  });
+  $('priChoices').addEventListener('click', e => {
+    const b = e.target.closest('[data-pri]');
+    if (b) { state.newPri = b.dataset.pri; renderChoices(); }
+  });
+
+  init();
+</script>
+</body>
+</html>
